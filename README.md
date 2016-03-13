@@ -8,7 +8,7 @@ A lightweight integration framework for Github and Toggl. :+1:
 ``` node app.js ```
 
 ### Run the tests
-``` mocha ```
+``` mocha --recursive```
 
 ### Install a new development dependency
 ``` npm install <module> --save-dev ```
