@@ -4,6 +4,9 @@ A lightweight integration framework for Github and Toggl. :+1:
 ### Install NPM dependencies
 ``` npm install ```
 
+### Start MongoDB
+``` mongod ```
+
 ### Run the server
 ``` node app.js ```
 

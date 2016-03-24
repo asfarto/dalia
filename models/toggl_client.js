@@ -1,48 +1,83 @@
 var querystring = require('querystring');
-var http = require('http');
-
+var https = require('https');
+var TimeEntry = require('./time_entry.js')
+var util = require('util')
 
 // curl -v -u 1971800d4d82861d8f2c1651fea4d212:api_token \
 //     -H "Content-Type: application/json" \
 //     -d '{"time_entry":{"description":"Meeting with possible clients",
 //                        "tags":["billed"],
-//                        "duration":1200,
-//                        "start":"2013-03-05T07:58:58.000Z",
 //                        "pid":123,
 //                        "created_with":"curl"}}' \
-//     -X POST https://www.toggl.com/api/v8/time_entries
+//     -X POST https://www.toggl.com/api/v8/time_entries/start
 
-exports.createTimeEntry = function(apiToken, duration, callback) {
+exports.startTimeEntry = function(apiToken, pid, callback) {
   
-  var postData = querystring.stringify({
-      'time_entry' : {
-        'description' : 'Testing Api',
-        'tags' : ['test'],
-        'duration' : duration,
-        'start' : '2016-03-05T07:58:58.000Z',
-        'pid' : '123',
-        'created_with' : 'dalia'
-      }
+  var postData = JSON.stringify({
+    'time_entry' : {
+      'description' : 'Testing Api',
+      'tags' : ['test'],
+      'pid' : pid,
+      'created_with' : 'dalia'
+    }
   });
 
   var postOptions = {
-      host: 'www.toggl.com',
-      path: '/api/v8/time_entries',
+      hostname: 'www.toggl.com',
+      path: '/api/v8/time_entries/start',
       method: 'POST',
+      auth: apiToken + ':api_token',
       headers: {
-          'Content-Type': 'application/json',
-          'Authorization': new Buffer(apiToken + ':api_token').toString('base64')
+          "content-type": "application/json",
       }
   };
 
-  var postReq = http.request(postOptions, function(res) {
+  var postReq = https.request(postOptions, function(res) {
       res.setEncoding('utf8');
+      var body = '';
       res.on('data', function (chunk) {
-        callback('Response: ' + chunk);
+        body += chunk;
+      });
+      res.on('end', function () {
+        response = JSON.parse(body);
+        timenEntry = new TimeEntry(response['data']);
+        callback(timenEntry);
       });
   });
 
   postReq.write(postData);
   postReq.end();
 
+}
+
+// curl -v -u 1971800d4d82861d8f2c1651fea4d212:api_token \
+//     -H "Content-Type: application/json" \
+//     -X PUT https://www.toggl.com/api/v8/time_entries/436694100/stop
+
+exports.stopTimeEntry = function(apiToken, timeEntryId, callback) {
+
+  var putOptions = {
+      hostname: 'www.toggl.com',
+      path: util.format('/api/v8/time_entries/%s/stop', timeEntryId),
+      method: 'PUT',
+      auth: apiToken + ':api_token',
+      headers: {
+          "content-type": "application/json",
+      }
+  };
+
+  var putReq = https.request(putOptions, function(res) {
+      res.setEncoding('utf8');
+      var body = '';
+      res.on('data', function (chunk) {
+        body += chunk;
+      });
+      res.on('end', function () {
+        response = JSON.parse(body);
+        timenEntry = new TimeEntry(response['data']);
+        callback(timenEntry);
+      });
+  });
+
+  putReq.end();
 }
